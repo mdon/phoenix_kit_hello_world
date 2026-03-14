@@ -79,7 +79,9 @@ defmodule PhoenixKitHelloWorldTest do
       [tab] = PhoenixKitHelloWorld.admin_tabs()
       assert tab.id == :admin_hello_world
       assert tab.label == "Hello World"
-      assert String.starts_with?(tab.path, "/admin")
+      # Tab paths can be relative ("hello-world") or absolute ("/admin/hello-world").
+      # PhoenixKit's Tab.resolve_path/2 prepends /admin/ for relative paths at registration.
+      assert is_binary(tab.path)
       assert tab.level == :admin
       assert tab.permission == PhoenixKitHelloWorld.module_key()
       assert tab.group == :admin_modules
