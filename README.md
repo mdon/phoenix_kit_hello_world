@@ -8,6 +8,7 @@ Modules can be **full-featured** (admin pages, settings, routes) or **headless**
 
 - [What this demonstrates](#what-this-demonstrates)
 - [Quick start](#quick-start)
+- [Dependency types: development vs production](#dependency-types-development-vs-production)
 - [Creating your own module](#creating-your-own-module)
 - [Headless modules](#headless-modules)
 - [Project structure](#project-structure)
@@ -36,7 +37,7 @@ Modules can be **full-featured** (admin pages, settings, routes) or **headless**
 
 ## Quick start
 
-Add to your parent app's `mix.exs`:
+For local development, add to your parent app's `mix.exs` using a path dependency:
 
 ```elixir
 {:phoenix_kit_hello_world, path: "../phoenix_kit_hello_world"}
@@ -47,6 +48,48 @@ Run `mix deps.get` and start the server. The module appears in:
 - **Admin sidebar** (under Modules section) — click to see the Hello World page
 - **Admin > Modules** — toggle it on/off
 - **Admin > Roles** — grant/revoke access per role
+
+## Dependency types: development vs production
+
+PhoenixKit modules are standard Mix dependencies. How you reference them in the parent app's `mix.exs` depends on your workflow:
+
+### Local development (`path:`)
+
+```elixir
+{:my_phoenix_kit_module, path: "../my_phoenix_kit_module"}
+```
+
+- **Best for**: active development where you're editing the module and the parent app together
+- Changes to the module's source are picked up automatically on recompile — no `--force` needed
+- The directory must exist on disk at the given relative path
+
+### Git dependency (`git:`)
+
+```elixir
+{:my_phoenix_kit_module, git: "https://github.com/you/my_phoenix_kit_module.git"}
+# or pin to a branch/tag/ref:
+{:my_phoenix_kit_module, git: "https://github.com/you/my_phoenix_kit_module.git", branch: "main"}
+{:my_phoenix_kit_module, git: "https://github.com/you/my_phoenix_kit_module.git", tag: "v1.0.0"}
+```
+
+- **Best for**: private modules not published to Hex, or referencing a specific commit/branch
+- Lives in `deps/` after `mix deps.get` — the dev reloader does **not** watch deps
+- After updating the remote, run `mix deps.update my_phoenix_kit_module`
+- To pick up changes: `mix deps.compile my_phoenix_kit_module --force` + restart the server
+
+### Hex package
+
+```elixir
+{:my_phoenix_kit_module, "~> 1.0"}
+```
+
+- **Best for**: published, versioned modules shared across projects
+- Lives in `deps/` — same recompile/restart workflow as git deps
+- See [Publishing to Hex](#publishing-to-hex) for how to publish your module
+
+### Why `path:` deps behave differently
+
+With `path:` dependencies, Mix treats the source directory as part of your project — file changes trigger recompilation automatically. With `git:` or Hex deps, the code lives in `deps/` and is compiled once. The Phoenix dev reloader only watches the parent app's own source files, not `deps/`. That's why non-path deps require `mix deps.compile <module> --force` and a server restart to pick up changes.
 
 ## Creating your own module
 
@@ -175,12 +218,16 @@ The admin layout (sidebar, header, theme) is applied automatically. You don't ne
 
 ### 5. Add to parent app
 
+For local development, add a path dependency to the parent app's `mix.exs`:
+
 ```elixir
-# In parent app's mix.exs
+# In parent app's mix.exs (local development)
 {:my_phoenix_kit_module, path: "../my_phoenix_kit_module"}
 ```
 
 Run `mix deps.get`, start the server, and your module appears in the admin panel.
+
+See [Dependency types: development vs production](#dependency-types-development-vs-production) for git and Hex alternatives when deploying.
 
 ## Headless modules
 
