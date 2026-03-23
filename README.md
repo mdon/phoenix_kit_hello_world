@@ -8,6 +8,7 @@ Modules can be **full-featured** (admin pages, settings, routes) or **headless**
 
 - [What this demonstrates](#what-this-demonstrates)
 - [Quick start](#quick-start)
+- [Dependency types: development vs production](#dependency-types-development-vs-production)
 - [Creating your own module](#creating-your-own-module)
 - [Headless modules](#headless-modules)
 - [Project structure](#project-structure)
@@ -36,7 +37,7 @@ Modules can be **full-featured** (admin pages, settings, routes) or **headless**
 
 ## Quick start
 
-Add to your parent app's `mix.exs`:
+For local development, add to your parent app's `mix.exs` using a path dependency:
 
 ```elixir
 {:phoenix_kit_hello_world, path: "../phoenix_kit_hello_world"}
@@ -47,6 +48,48 @@ Run `mix deps.get` and start the server. The module appears in:
 - **Admin sidebar** (under Modules section) — click to see the Hello World page
 - **Admin > Modules** — toggle it on/off
 - **Admin > Roles** — grant/revoke access per role
+
+## Dependency types: development vs production
+
+PhoenixKit modules are standard Mix dependencies. How you reference them in the parent app's `mix.exs` depends on your workflow:
+
+### Local development (`path:`)
+
+```elixir
+{:my_phoenix_kit_module, path: "../my_phoenix_kit_module"}
+```
+
+- **Best for**: active development where you're editing the module and the parent app together
+- Changes to the module's source are picked up automatically on recompile — no `--force` needed
+- The directory must exist on disk at the given relative path
+
+### Git dependency (`git:`)
+
+```elixir
+{:my_phoenix_kit_module, git: "https://github.com/you/my_phoenix_kit_module.git"}
+# or pin to a branch/tag/ref:
+{:my_phoenix_kit_module, git: "https://github.com/you/my_phoenix_kit_module.git", branch: "main"}
+{:my_phoenix_kit_module, git: "https://github.com/you/my_phoenix_kit_module.git", tag: "v1.0.0"}
+```
+
+- **Best for**: private modules not published to Hex, or referencing a specific commit/branch
+- Lives in `deps/` after `mix deps.get` — the dev reloader does **not** watch deps
+- After updating the remote, run `mix deps.update my_phoenix_kit_module`
+- To pick up changes: `mix deps.compile my_phoenix_kit_module --force` + restart the server
+
+### Hex package
+
+```elixir
+{:my_phoenix_kit_module, "~> 1.0"}
+```
+
+- **Best for**: published, versioned modules shared across projects
+- Lives in `deps/` — same recompile/restart workflow as git deps
+- See [Publishing to Hex](#publishing-to-hex) for how to publish your module
+
+### Why `path:` deps behave differently
+
+With `path:` dependencies, Mix treats the source directory as part of your project — file changes trigger recompilation automatically. With `git:` or Hex deps, the code lives in `deps/` and is compiled once. The Phoenix dev reloader only watches the parent app's own source files, not `deps/`. That's why non-path deps require `mix deps.compile <module> --force` and a server restart to pick up changes.
 
 ## Creating your own module
 
@@ -154,7 +197,7 @@ end
 
 ```elixir
 defmodule MyPhoenixKitModule.Web.IndexLive do
-  use Phoenix.LiveView
+  use PhoenixKitWeb, :live_view
 
   def mount(_params, _session, socket) do
     {:ok, assign(socket, :page_title, "My Module")}
@@ -175,12 +218,16 @@ The admin layout (sidebar, header, theme) is applied automatically. You don't ne
 
 ### 5. Add to parent app
 
+For local development, add a path dependency to the parent app's `mix.exs`:
+
 ```elixir
-# In parent app's mix.exs
+# In parent app's mix.exs (local development)
 {:my_phoenix_kit_module, path: "../my_phoenix_kit_module"}
 ```
 
 Run `mix deps.get`, start the server, and your module appears in the admin panel.
+
+See [Dependency types: development vs production](#dependency-types-development-vs-production) for git and Hex alternatives when deploying.
 
 ## Headless modules
 
@@ -907,6 +954,38 @@ The ModuleRegistry validates at boot:
 
 These are warnings, not crashes, so a misconfigured module won't take down the app. But the symptom is that toggling the module works in the UI but permission checks use the wrong key.
 
+## PhoenixKit components
+
+Use `use PhoenixKitWeb, :live_view` in your LiveViews (not `use Phoenix.LiveView` directly). This imports PhoenixKit's core components, Gettext, layout config, and HTML helpers — giving you a consistent admin UI out of the box.
+
+Available components include:
+
+- `<.icon name="hero-*" />` — Heroicons
+- `<.button>`, `<.simple_form>`, `<.input>`, `<.select>`, `<.textarea>`, `<.checkbox>`
+- `<.flash>`, `<.header>`, `<.badge>`, `<.stat_card>`
+- `<.form_field_label>`, `<.form_field_error>`
+
+```elixir
+defmodule MyModule.Web.DashboardLive do
+  use PhoenixKitWeb, :live_view  # imports all PhoenixKit components
+
+  def render(assigns) do
+    ~H\"""
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">
+          <.icon name="hero-chart-bar" class="w-5 h-5" /> Dashboard
+        </h2>
+        <p class="text-base-content/70">Your module content here.</p>
+      </div>
+    </div>
+    \"""
+  end
+end
+```
+
+For controllers, use `use PhoenixKitWeb, :controller`.
+
 ## Component reuse
 
 As your module grows, extract shared UI into reusable function components. This keeps your LiveViews focused on business logic while shared presentation lives in dedicated component modules.
@@ -951,7 +1030,7 @@ Import the component module and call the function:
 
 ```elixir
 defmodule MyPhoenixKitModule.Web.IndexLive do
-  use Phoenix.LiveView
+  use PhoenixKitWeb, :live_view
 
   import MyPhoenixKitModule.Web.Components.ItemCard
 
@@ -970,7 +1049,7 @@ The same component can be used across multiple LiveViews in your module:
 ```elixir
 # In another LiveView
 defmodule MyPhoenixKitModule.Web.SearchResultsLive do
-  use Phoenix.LiveView
+  use PhoenixKitWeb, :live_view
 
   import MyPhoenixKitModule.Web.Components.ItemCard
 
@@ -1808,45 +1887,343 @@ Always reference the `uuid` column, not `id` (integer IDs are deprecated).
 
 ## Testing
 
-The template includes behaviour compliance tests. Run them with:
+Run tests with:
 
 ```bash
 mix test
 ```
 
-These tests verify your module implements all required callbacks correctly, that permission metadata matches the module key, and that tab definitions are valid.
+### Test levels
 
-For integration testing (LiveView rendering, database interactions), you'll need a parent app with phoenix_kit installed. The template's tests focus on what can be verified without a running application.
+PhoenixKit modules have two distinct test levels:
 
-### Key things to test
+- **Unit tests** — no database, test schemas/changesets/pure functions (`use ExUnit.Case, async: true`)
+- **Integration tests** — need PostgreSQL, test context modules and data flow (`use MyModule.DataCase`)
+
+Unit tests always run. Integration tests are automatically excluded when the database is unavailable.
+
+### Unit tests (no database needed)
+
+These verify your module implements the `PhoenixKit.Module` behaviour correctly. They work without any infrastructure:
 
 ```elixir
-# Test that module_key and permission_metadata.key match
-test "permission key matches module_key" do
-  assert MyModule.permission_metadata().key == MyModule.module_key()
-end
+defmodule MyModuleTest do
+  use ExUnit.Case, async: true
 
-# Test that tab IDs are prefixed
-test "tab IDs are namespaced" do
-  for tab <- MyModule.admin_tabs() do
-    assert tab.id |> to_string() |> String.starts_with?("admin_my_module")
+  # Behaviour compliance
+  test "implements PhoenixKit.Module" do
+    behaviours =
+      MyModule.__info__(:attributes)
+      |> Keyword.get_values(:behaviour)
+      |> List.flatten()
+
+    assert PhoenixKit.Module in behaviours
   end
-end
 
-# Test that tab paths use hyphens
-test "tab paths use hyphens not underscores" do
-  for tab <- MyModule.admin_tabs() do
-    refute String.contains?(tab.path, "_"),
-      "Tab path #{tab.path} contains underscores — use hyphens"
+  test "has @phoenix_kit_module attribute for auto-discovery" do
+    attrs = MyModule.__info__(:attributes)
+    assert Keyword.get(attrs, :phoenix_kit_module) == [true]
   end
-end
 
-# Test that enabled? rescues
-test "enabled? returns false when DB unavailable" do
-  # Will rescue since no DB is running in test
-  refute MyModule.enabled?()
+  # Required callbacks
+  test "module_key/0 returns expected key" do
+    assert MyModule.module_key() == "my_module"
+  end
+
+  test "enabled?/0 returns false when DB unavailable" do
+    # Will rescue since no DB is running in unit tests
+    refute MyModule.enabled?()
+  end
+
+  # Permission metadata
+  test "permission key matches module_key" do
+    assert MyModule.permission_metadata().key == MyModule.module_key()
+  end
+
+  test "icon uses hero- prefix" do
+    assert String.starts_with?(MyModule.permission_metadata().icon, "hero-")
+  end
+
+  # Tab conventions
+  test "tab IDs are namespaced" do
+    for tab <- MyModule.admin_tabs() do
+      assert tab.id |> to_string() |> String.starts_with?("admin_my_module")
+    end
+  end
+
+  test "tab paths use hyphens not underscores" do
+    for tab <- MyModule.admin_tabs() do
+      refute String.contains?(tab.path, "_"),
+        "Tab path #{tab.path} contains underscores — use hyphens"
+    end
+  end
+
+  test "all tabs have permission matching module_key" do
+    for tab <- MyModule.admin_tabs() do
+      assert tab.permission == MyModule.module_key()
+    end
+  end
+
+  test "main tab has live_view for route generation" do
+    [tab | _] = MyModule.admin_tabs()
+    assert {_module, _action} = tab.live_view
+  end
+
+  test "all subtabs reference parent" do
+    [main | subtabs] = MyModule.admin_tabs()
+    for tab <- subtabs do
+      assert tab.parent == main.id
+    end
+  end
 end
 ```
+
+For modules with Ecto schemas, you can test changesets without a database:
+
+```elixir
+test "changeset validates required fields" do
+  changeset = MySchema.changeset(%MySchema{}, %{})
+  refute changeset.valid?
+  assert "can't be blank" in errors_on(changeset).name
+end
+```
+
+### Integration test infrastructure
+
+If your module uses the database, you need test infrastructure. Here's the complete setup:
+
+#### 1. Update `mix.exs`
+
+```elixir
+def project do
+  [
+    # ... existing config ...
+    elixirc_paths: elixirc_paths(Mix.env()),
+  ]
+end
+
+defp elixirc_paths(:test), do: ["lib", "test/support"]
+defp elixirc_paths(_), do: ["lib"]
+
+defp aliases do
+  [
+    # ... existing aliases ...
+    "test.setup": ["ecto.create --quiet", "ecto.migrate --quiet"],
+    "test.reset": ["ecto.drop --quiet", "test.setup"]
+  ]
+end
+```
+
+#### 2. Create `config/config.exs` and `config/test.exs`
+
+```elixir
+# config/config.exs
+import Config
+
+if config_env() == :test do
+  import_config "test.exs"
+end
+```
+
+```elixir
+# config/test.exs
+import Config
+
+# Your module's own test repo
+config :my_module, ecto_repos: [MyModule.Test.Repo]
+
+config :my_module, MyModule.Test.Repo,
+  username: System.get_env("PGUSER", "postgres"),
+  password: System.get_env("PGPASSWORD", "postgres"),
+  hostname: System.get_env("PGHOST", "localhost"),
+  database: "my_module_test#{System.get_env("MIX_TEST_PARTITION")}",
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: System.schedulers_online() * 2
+
+# Wire repo for PhoenixKit.RepoHelper — without this, all DB calls crash
+config :phoenix_kit, repo: MyModule.Test.Repo
+
+config :logger, level: :warning
+```
+
+#### 3. Create test support modules
+
+```elixir
+# test/support/test_repo.ex
+defmodule MyModule.Test.Repo do
+  use Ecto.Repo,
+    otp_app: :my_module,
+    adapter: Ecto.Adapters.Postgres
+end
+```
+
+```elixir
+# test/support/data_case.ex
+defmodule MyModule.DataCase do
+  use ExUnit.CaseTemplate
+
+  using do
+    quote do
+      @moduletag :integration
+
+      alias MyModule.Test.Repo
+
+      import Ecto
+      import Ecto.Changeset
+      import Ecto.Query
+    end
+  end
+
+  alias Ecto.Adapters.SQL.Sandbox
+  alias MyModule.Test.Repo, as: TestRepo
+
+  setup tags do
+    pid = Sandbox.start_owner!(TestRepo, shared: not tags[:async])
+    on_exit(fn -> Sandbox.stop_owner(pid) end)
+    :ok
+  end
+end
+```
+
+#### 4. Create `test/test_helper.exs`
+
+```elixir
+alias MyModule.Test.Repo, as: TestRepo
+
+db_config = Application.get_env(:my_module, TestRepo, [])
+db_name = db_config[:database] || "my_module_test"
+
+# Check if test database exists
+db_check =
+  case System.cmd("psql", ["-lqt"], stderr_to_stdout: true) do
+    {output, 0} ->
+      exists =
+        output
+        |> String.split("\n")
+        |> Enum.any?(fn line ->
+          line |> String.split("|") |> List.first("") |> String.trim() == db_name
+        end)
+
+      if exists, do: :exists, else: :not_found
+
+    _ ->
+      :try_connect
+  end
+
+repo_available =
+  if db_check == :not_found do
+    IO.puts("\n  Test database \"#{db_name}\" not found — integration tests excluded.\n  Run: createdb #{db_name}\n")
+    false
+  else
+    try do
+      {:ok, _} = TestRepo.start_link()
+
+      # Create uuid_generate_v7() — normally from PhoenixKit's V40 migration.
+      # Your test DB won't have it unless you create it here.
+      TestRepo.query!("""
+      CREATE OR REPLACE FUNCTION uuid_generate_v7()
+      RETURNS uuid AS $$
+      DECLARE
+        unix_ts_ms bytea;
+        uuid_bytes bytea;
+      BEGIN
+        unix_ts_ms := substring(int8send(floor(extract(epoch FROM clock_timestamp()) * 1000)::bigint) FROM 3);
+        uuid_bytes := unix_ts_ms || gen_random_bytes(10);
+        uuid_bytes := set_byte(uuid_bytes, 6, (get_byte(uuid_bytes, 6) & 15) | 112);
+        uuid_bytes := set_byte(uuid_bytes, 8, (get_byte(uuid_bytes, 8) & 63) | 128);
+        RETURN encode(uuid_bytes, 'hex')::uuid;
+      END;
+      $$ LANGUAGE plpgsql VOLATILE;
+      """)
+
+      # Run your migration if you have one
+      # Ecto.Migrator.up(TestRepo, 0, MyModule.Migration, log: false)
+
+      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, :manual)
+      true
+    rescue
+      e ->
+        IO.puts("\n  Could not connect to test database — integration tests excluded.\n  Error: #{Exception.message(e)}\n")
+        false
+    catch
+      :exit, reason ->
+        IO.puts("\n  Could not connect to test database — integration tests excluded.\n  Error: #{inspect(reason)}\n")
+        false
+    end
+  end
+
+# Start minimal PhoenixKit services needed for tests
+{:ok, _} = PhoenixKit.PubSub.Manager.start_link([])
+{:ok, _} = PhoenixKit.ModuleRegistry.start_link([])
+
+exclude = if repo_available, do: [], else: [:integration]
+ExUnit.start(exclude: exclude)
+```
+
+#### 5. Create the database
+
+```bash
+createdb my_module_test
+mix test
+```
+
+Integration tests are tagged `:integration` via the `DataCase` and automatically excluded when the database doesn't exist.
+
+### Gotchas
+
+These are common issues you'll hit when setting up tests for PhoenixKit modules:
+
+**Use string keys for context module attrs.** PhoenixKit context modules (like `Connections.create_connection/1`) may inject string keys internally. If you pass atom keys, you'll get `Ecto.CastError: mixed keys`. Always use string keys:
+
+```elixir
+# Bad — will crash with mixed key error
+Connections.create_connection(%{name: "Test", direction: "sender", site_url: "https://example.com"})
+
+# Good
+Connections.create_connection(%{"name" => "Test", "direction" => "sender", "site_url" => "https://example.com"})
+```
+
+**Use `UUIDv7.generate()` for foreign key fields.** Fields like `approved_by_uuid` reference the `phoenix_kit_users` table. Passing a plain string like `"admin"` causes `Ecto.ChangeError: does not match type UUIDv7`:
+
+```elixir
+# Bad
+Connections.approve_connection(conn, "admin")
+
+# Good
+Connections.approve_connection(conn, UUIDv7.generate())
+```
+
+**Ecto schema types vs migration types.** Migrations use `:bigint` and `:text`, but Ecto schemas must use `:integer` and `:string` — Ecto doesn't have `:bigint` or `:text` as schema field types. The distinction only matters at the database level.
+
+**`enabled?/0` hits the database.** Calling `enabled?/0` or `get_config/0` in unit tests triggers a DB call through `PhoenixKit.Settings`, which fails with a sandbox ownership error. Either tag those tests as `:integration` or just test `function_exported?/3`:
+
+```elixir
+# In unit tests (no DB) — test the export, not the call
+test "get_config/0 is exported" do
+  assert function_exported?(MyModule, :get_config, 0)
+end
+```
+
+**Run migrations via `Ecto.Migrator`.** If your module has a migration, you can't call `MyModule.Migration.up()` directly — it uses `Ecto.Migration` macros that require a migrator process. Use `Ecto.Migrator.up/4`:
+
+```elixir
+# In test_helper.exs
+Ecto.Migrator.up(TestRepo, 0, MyModule.Migration, log: false)
+```
+
+**ETS-based stores use hardcoded table names.** If your module has a GenServer with ETS (like a session store), the table name is global. Tests that start their own instance will conflict. Use `setup_all` with `already_started` handling:
+
+```elixir
+setup_all do
+  case MyStore.start_link([]) do
+    {:ok, _pid} -> :ok
+    {:error, {:already_started, _pid}} -> :ok
+  end
+  :ok
+end
+```
+
+**`uuid_generate_v7()` must be created manually in test DB.** PhoenixKit's V40 migration creates this PostgreSQL function, but your test database won't have it. The `test_helper.exs` template above includes the function definition.
 
 ## Verifying your module
 

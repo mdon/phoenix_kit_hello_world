@@ -9,8 +9,10 @@ defmodule PhoenixKitHelloWorld.MixProject do
       app: :phoenix_kit_hello_world,
       version: @version,
       elixir: "~> 1.15",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      aliases: aliases(),
 
       # Hex
       description:
@@ -33,6 +35,20 @@ defmodule PhoenixKitHelloWorld.MixProject do
     ]
   end
 
+  # test/support/ is compiled only in :test so DataCase and TestRepo
+  # don't leak into the published package.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
+  defp aliases do
+    [
+      quality: ["format", "credo --strict", "dialyzer"],
+      "quality.ci": ["format --check-formatted", "credo --strict", "dialyzer"],
+      "test.setup": ["ecto.create --quiet", "ecto.migrate --quiet"],
+      "test.reset": ["ecto.drop --quiet", "test.setup"]
+    ]
+  end
+
   defp deps do
     [
       # PhoenixKit provides the Module behaviour and Settings API.
@@ -41,6 +57,7 @@ defmodule PhoenixKitHelloWorld.MixProject do
 
       # LiveView is needed for the admin page.
       {:phoenix_live_view, "~> 1.0"},
+
 
       # Optional: add ex_doc for generating documentation
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
