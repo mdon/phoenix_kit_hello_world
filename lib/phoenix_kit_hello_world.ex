@@ -181,16 +181,7 @@ defmodule PhoenixKitHelloWorld do
   end
 
   @impl PhoenixKit.Module
-  @doc """
-  Declares this module's OTP app for Tailwind CSS scanning.
-
-  The PhoenixKit installer uses this to add an `@source` directive to the
-  parent app's `assets/css/app.css`, ensuring Tailwind picks up CSS classes
-  from this module's templates.
-
-  Without this, Tailwind will purge any CSS classes unique to this module.
-  Headless modules (no templates) can skip this — the default is `[]`.
-  """
+  @doc "OTP apps whose templates Tailwind should scan for CSS classes."
   def css_sources, do: [:phoenix_kit_hello_world]
 
   # ===========================================================================
@@ -215,6 +206,7 @@ defmodule PhoenixKitHelloWorld do
   #   def settings_tabs, do: []
   #   def user_dashboard_tabs, do: []
   #   def children, do: []
+  #   def route_module, do: nil          # see Route module section above
   #   def migration_module, do: nil
   #
   # See the PhoenixKit.Module docs for details on each.

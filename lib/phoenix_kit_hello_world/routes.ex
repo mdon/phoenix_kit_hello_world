@@ -1,3 +1,7 @@
+# Template scaffold — uncomment the stubs below when your module needs
+# multiple admin pages or public routes. Not wired up by default; enable
+# by uncommenting `route_module/0` in the main module.
+
 defmodule PhoenixKitHelloWorld.Routes do
   @moduledoc """
   Route module for complex routing needs.
@@ -80,6 +84,9 @@ defmodule PhoenixKitHelloWorld.Routes do
 
   # ── Public routes ────────────────────────────────────────────────────
   # Uncomment if your module needs public (non-admin) routes.
+  #
+  # Use `generate/1` for specific, non-catch-all public routes (placed
+  # early in the router).
 
   # def generate(url_prefix) do
   #   quote do
@@ -89,6 +96,22 @@ defmodule PhoenixKitHelloWorld.Routes do
   #       post "/hello-world/submit",
   #            PhoenixKitHelloWorld.Web.SubmitController,
   #            :submit
+  #     end
+  #   end
+  # end
+
+  # Use `public_routes/1` for catch-all routes like `/:slug` or
+  # `/:group/*path`. These are placed LAST in the router, after all
+  # admin and localized routes, so they won't intercept other paths.
+  # WARNING: Putting catch-all routes in `generate/1` will break the
+  # admin panel.
+
+  # def public_routes(url_prefix) do
+  #   quote do
+  #     scope unquote(url_prefix) do
+  #       pipe_through [:browser, :phoenix_kit_auto_setup]
+  #
+  #       live "/:slug", PhoenixKitHelloWorld.Web.PageLive, :show
   #     end
   #   end
   # end
