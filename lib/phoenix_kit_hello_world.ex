@@ -194,13 +194,27 @@ defmodule PhoenixKitHelloWorld do
   def css_sources, do: [:phoenix_kit_hello_world]
 
   # ===========================================================================
+  # Route module (for multi-page modules)
+  # ===========================================================================
+  #
+  # This module has a single admin page, so the `live_view` field on admin_tabs
+  # handles routing automatically. If you add more pages (e.g., a form, settings,
+  # sub-pages), uncomment this and define your routes in the Routes module:
+  #
+  #   @impl PhoenixKit.Module
+  #   def route_module, do: PhoenixKitHelloWorld.Routes
+  #
+  # When using route_module, you can REMOVE the `live_view` field from
+  # admin_tabs — the Routes module takes over all route registration.
+  # See lib/phoenix_kit_hello_world/routes.ex for the full pattern.
+
+  # ===========================================================================
   # Other optional callbacks you can override (shown with their defaults):
   #
   #   def get_config, do: %{enabled: enabled?()}
   #   def settings_tabs, do: []
   #   def user_dashboard_tabs, do: []
   #   def children, do: []
-  #   def route_module, do: nil
   #   def migration_module, do: nil
   #
   # See the PhoenixKit.Module docs for details on each.
