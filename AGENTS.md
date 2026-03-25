@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI agents when working with code in this repository.
 
 ## Project Overview
 
@@ -67,18 +67,48 @@ Both functions define the same routes — one for localized paths (`:locale` pre
 
 Modules with templates using Tailwind classes must implement `css_sources/0` returning their OTP app name as an atom list (e.g., `[:my_module]`). PhoenixKit's installer (`mix phoenix_kit.install`) discovers these and adds `@source` directives to the parent's `app.css`. Without this, Tailwind purges the module's CSS classes. Headless modules without UI can skip this.
 
-## PR Reviews
+## Versioning & Releases
 
-Store review files in `dev_docs/pull_requests/{year}/{pr_number}-{slug}/`.
+### Tagging & GitHub releases
 
-| File | Status | Purpose |
-|------|--------|---------|
-| `README.md` | Required | PR summary: goal, what changed, why, how |
-| `{AGENT}_REVIEW.md` | Optional | Review feedback, issues found, analysis |
-| `FOLLOW_UP.md` | Optional | Post-merge issues, discovered bugs, refactor notes |
-| `CONTEXT.md` | Optional | Alternatives considered, trade-offs, deep dive |
+Tags use **bare version numbers** (no `v` prefix):
 
-Directory naming: `{pr_number}-{short-slug}/` (e.g., `6-routing-scaffold-css-scanning`). Review file naming: `CLAUDE_REVIEW.md`, `GEMINI_REVIEW.md`, etc.
+```bash
+git tag 0.1.0
+git push origin 0.1.0
+```
+
+GitHub releases are created with `gh release create` using the tag as the release name. The title format is `<version> - <date>`, and the body comes from the corresponding `CHANGELOG.md` section:
+
+```bash
+gh release create 0.1.0 \
+  --title "0.1.0 - 2026-03-24" \
+  --notes "$(changelog body for this version)"
+```
+
+### Full release checklist
+
+1. Update version in `mix.exs`, `lib/phoenix_kit_hello_world.ex` (`version/0`), and the version test
+2. Add changelog entry in `CHANGELOG.md`
+3. Commit: `"Bump version to x.y.z"`
+4. Push to main
+5. Create and push git tag: `git tag x.y.z && git push origin x.y.z`
+6. Create GitHub release: `gh release create x.y.z --title "x.y.z - YYYY-MM-DD" --notes "..."`
+
+## Pull Requests
+
+### Commit Message Rules
+
+Start with action verbs: `Add`, `Update`, `Fix`, `Remove`, `Merge`. **NEVER mention Claude or AI assistance** in commit messages.
+
+### PR Reviews
+
+PR review files go in `dev_docs/pull_requests/{year}/{pr_number}-{slug}/` directory. Use `{AGENT}_REVIEW.md` naming (e.g., `CLAUDE_REVIEW.md`, `GPT_REVIEW.md`). See `dev_docs/pull_requests/README.md`.
+
+## External Dependencies
+
+- **PhoenixKit** (`~> 1.7`) — Module behaviour, Settings API, shared components, RepoHelper
+- **Phoenix LiveView** (`~> 1.0`) — Admin LiveViews
 
 ## Two Module Types
 
