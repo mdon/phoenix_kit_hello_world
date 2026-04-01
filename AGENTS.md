@@ -75,7 +75,17 @@ Module routes are auto-discovered at compile time — no manual registration nee
 
 ## Tailwind CSS Scanning
 
-Modules with templates using Tailwind classes must implement `css_sources/0` returning their OTP app name as an atom list (e.g., `[:my_module]`). PhoenixKit's installer (`mix phoenix_kit.install`) discovers these and adds `@source` directives to the parent's `app.css`. Without this, Tailwind purges the module's CSS classes. Headless modules without UI can skip this.
+Modules with templates using Tailwind classes must implement `css_sources/0` returning their OTP app name as an atom list (e.g., `[:my_module]`). CSS source discovery is **automatic at compile time** — the `:phoenix_kit_css_sources` compiler scans all discovered modules, calls `css_sources/0`, and writes `assets/css/_phoenix_kit_sources.css` with the correct `@source` directives. The parent app's `app.css` imports this generated file:
+
+```css
+@import "./_phoenix_kit_sources.css";
+```
+
+**Setup (one-time, handled by `mix phoenix_kit.install`):**
+1. Add `:phoenix_kit_css_sources` to the `compilers:` list in `mix.exs` (before `:phoenix_live_view`)
+2. Add `@import "./_phoenix_kit_sources.css";` to `app.css`
+
+After setup, adding or removing modules with `css_sources/0` is zero-config — the compiler regenerates the file on each compilation. Headless modules without UI can skip implementing `css_sources/0`.
 
 ## Versioning & Releases
 
