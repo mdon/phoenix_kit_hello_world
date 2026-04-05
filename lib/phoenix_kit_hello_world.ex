@@ -53,24 +53,24 @@ defmodule PhoenixKitHelloWorld do
 
   ## Callbacks overview
 
-  | Callback              | Required? | What it does                                      |
-  |-----------------------|-----------|---------------------------------------------------|
-  | `module_key/0`        | Yes       | Unique string key (used in settings, permissions)  |
-  | `module_name/0`       | Yes       | Human-readable name (shown in admin UI)            |
-  | `enabled?/0`          | Yes       | Whether the module is currently on                 |
-  | `enable_system/0`     | Yes       | Turn the module on (persists to DB)                |
-  | `disable_system/0`    | Yes       | Turn the module off (persists to DB)               |
-  | `permission_metadata/0` | No     | Icon, label, description for permissions UI        |
-  | `admin_tabs/0`        | No        | Tabs to add to the admin sidebar                   |
-  | `settings_tabs/0`     | No        | Tabs to add to the admin settings page             |
-  | `children/0`          | No        | Supervisor child specs (GenServers, workers, etc.) |
-  | `version/0`           | No        | Version string (default: "0.0.0")                  |
-  | `get_config/0`        | No        | Stats/config map shown on the Modules page         |
-  | `route_module/0`      | No        | Module providing custom route macros               |
-  | `user_dashboard_tabs/0` | No     | Tabs for the user-facing dashboard                 |
-  | `migration_module/0`  | No        | Versioned migration coordinator module             |
-  | `required_integrations/0` | No   | Integration provider keys this module needs        |
-  | `integration_providers/0` | No   | Custom provider definitions to contribute          |
+  | Callback                  | Required? | What it does                                      |
+  |---------------------------|-----------|---------------------------------------------------|
+  | `module_key/0`            | Yes       | Unique string key (used in settings, permissions)  |
+  | `module_name/0`           | Yes       | Human-readable name (shown in admin UI)            |
+  | `enabled?/0`              | Yes       | Whether the module is currently on                 |
+  | `enable_system/0`         | Yes       | Turn the module on (persists to DB)                |
+  | `disable_system/0`        | Yes       | Turn the module off (persists to DB)               |
+  | `permission_metadata/0`   | No        | Icon, label, description for permissions UI        |
+  | `admin_tabs/0`            | No        | Tabs to add to the admin sidebar                   |
+  | `settings_tabs/0`         | No        | Tabs to add to the admin settings page             |
+  | `children/0`              | No        | Supervisor child specs (GenServers, workers, etc.) |
+  | `version/0`               | No        | Version string (default: "0.0.0")                  |
+  | `get_config/0`            | No        | Stats/config map shown on the Modules page         |
+  | `route_module/0`          | No        | Module providing custom route macros               |
+  | `user_dashboard_tabs/0`   | No        | Tabs for the user-facing dashboard                 |
+  | `migration_module/0`      | No        | Versioned migration coordinator module             |
+  | `required_integrations/0` | No        | Integration provider keys this module needs        |
+  | `integration_providers/0` | No        | Custom provider definitions to contribute          |
   """
 
   use PhoenixKit.Module
@@ -211,7 +211,7 @@ defmodule PhoenixKitHelloWorld do
   #   def route_module, do: nil          # see Route module section above
   #   def migration_module, do: nil
   #   def required_integrations, do: []  # e.g., ["google"] or ["openrouter"]
-  #   def integration_providers, do: []  # custom provider definitions
+  #   def integration_providers, do: []  # e.g., [%{key: "my_provider", name: "My Provider"}]
   #
   # See the PhoenixKit.Module docs for details on each.
   # ===========================================================================
