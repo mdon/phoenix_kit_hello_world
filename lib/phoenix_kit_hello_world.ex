@@ -126,7 +126,7 @@ defmodule PhoenixKitHelloWorld do
 
   @impl PhoenixKit.Module
   @doc "Version string. Shown on the admin Modules page."
-  def version, do: "0.1.3"
+  def version, do: "0.1.4"
 
   @impl PhoenixKit.Module
   @doc """

@@ -1,3 +1,11 @@
+## 0.1.4 - 2026-04-11
+
+### Fixed
+- Correct routing guidance: dynamic path segments ARE supported via tabs
+- Add sidebar/socket-crash troubleshooting to README
+- Document hidden-tab pattern for CRUD sub-pages
+- Clarify route module vs tab-based coexistence
+
 ## 0.1.3 - 2026-04-11
 
 ### Added
