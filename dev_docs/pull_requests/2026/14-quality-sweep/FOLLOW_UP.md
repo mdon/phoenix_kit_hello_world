@@ -25,18 +25,20 @@ surfaced the items below.
 ### Fixed (Batch 2 — 2026-04-26)
 
 - ~~**C12 #2 [HIGH]** Ungettext'd headings + dt labels in
-  `hello_live.ex`~~ — wrapped 22 strings in
-  `Gettext.gettext(PhoenixKitWeb.Gettext, ...)`: card titles
-  ("Hello World Plugin", "Activity Logging Demo", "Module Info",
-  "Current User", "Explore the showcase", "Next Steps"), every dt
-  label in the Module Info / Current User cards (Module, Key,
-  Version, Enabled, Email, Roles, Admin?, Module access?), the
-  "Show the code pattern" details summary, and the next-steps list
-  body text. The original sweep wrapped flash messages, status
-  badges, and explicit feature-callout copy but missed the structural
-  card titles and dt labels — pinned with new "renders gettext-
-  wrapped dt labels in both info cards" test that asserts the
-  exact literal inside a `<dt>` tag for each of the 8 labels.
+  `hello_live.ex`~~ — wrapped ~22 user-facing text spans via 32
+  `Gettext.gettext(PhoenixKitWeb.Gettext, ...)` call sites (long
+  paragraphs split across multiple calls due to inline `<code>` /
+  `<.link>` interpolation): card titles ("Hello World Plugin",
+  "Activity Logging Demo", "Module Info", "Current User", "Explore
+  the showcase", "Next Steps"), every dt label in the Module Info /
+  Current User cards (Module, Key, Version, Enabled, Email, Roles,
+  Admin?, Module access?), the "Show the code pattern" details
+  summary, and the next-steps list body text. The original sweep
+  wrapped flash messages, status badges, and explicit feature-callout
+  copy but missed the structural card titles and dt labels — pinned
+  with new "renders gettext-wrapped dt labels in both info cards"
+  test that asserts the exact literal inside a `<dt>` tag for each
+  of the 8 labels.
 
 - ~~**C12 #2 [HIGH]** Ungettext'd `title="View details"` in
   `events_live.ex:314`~~ — wrapped via the verbose form
@@ -123,7 +125,7 @@ surfaced the items below.
 
 | File                                                                                   | Change                                                                       |
 |----------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
-| `lib/phoenix_kit_hello_world/web/hello_live.ex`                                        | 22 gettext wraps on card titles, dt labels, next-steps copy; handle_info catch-all |
+| `lib/phoenix_kit_hello_world/web/hello_live.ex`                                        | 32 gettext wrap call sites (~22 user-facing spans) on card titles, dt labels, next-steps copy; handle_info catch-all |
 | `lib/phoenix_kit_hello_world/web/events_live.ex`                                       | gettext wrap on `title="View details"`; `require Logger`; handle_info catch-all   |
 | `lib/phoenix_kit_hello_world/web/components_live.ex`                                   | handle_info catch-all                                                        |
 | `test/phoenix_kit_hello_world/web/hello_live_test.exs`                                 | +2 tests: dt-label regex sweep, handle_info catch-all smoke                  |
